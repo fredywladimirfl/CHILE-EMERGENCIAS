@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="App de preparación para emergencias en Chile: sismos, volcanes, aluviones, inundaciones y clima extremo.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Chile Preparado – Emergencias</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🇨🇱</text></svg>">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo-wrap">
+          <svg class="app-logo" viewBox="0 0 64 64" width="42" height="42" aria-hidden="true">
+            <defs>
+              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#e11d48"/>
+                <stop offset="50%" style="stop-color:#fff"/>
+                <stop offset="100%" style="stop-color:#1d4ed8"/>
+              </linearGradient>
+            </defs>
+            <!-- Shield -->
+            <path d="M32 4 L56 14 L56 32 C56 46 44 56 32 60 C20 56 8 46 8 32 L8 14 Z" fill="#0f172a" stroke="#3b82f6" stroke-width="2.5"/>
+            <!-- Chile map simplified -->
+            <path d="M28 16 C30 15 34 16 36 18 L38 28 L36 38 L34 48 L30 52 L28 48 L26 38 L24 28 Z" fill="#e11d48" opacity="0.9"/>
+            <!-- Star -->
+            <polygon points="32,20 33.2,23.5 36.8,23.5 34,25.8 35,29.5 32,27.2 29,29.5 30,25.8 27.2,23.5 30.8,23.5" fill="#fff"/>
+            <!-- Wave / base -->
+            <path d="M18 42 Q24 38 32 42 Q40 46 46 42" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div class="logo-text">
+            <h1>Chile Preparado</h1>
+            <p class="subtitle">Preparación ante emergencias</p>
+          </div>
+        </div>
+      </div>
+      <button id="theme-toggle" class="icon-btn" title="Cambiar tema">🌙</button>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <button class="nav-btn active" data-section="inicio">Inicio</button>
+      <button class="nav-btn" data-section="alertas">Alertas</button>
+      <button class="nav-btn" data-section="kit">Kit</button>
+      <button class="nav-btn" data-section="guias">Guías</button>
+      <button class="nav-btn" data-section="plan">Plan</button>
+      <button class="nav-btn" data-section="contactos">Contactos</button>
+      <button class="nav-btn" data-section="extras">Extras</button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- INICIO -->
+      <section id="inicio" class="section active">
+        <!-- Selector de región -->
+        <div class="card highlight">
+          <h2>📍 Tu ubicación</h2>
+          <p class="hint">Selecciona región y comuna para riesgos más precisos, o usa GPS.</p>
+          
+          <div class="region-controls">
+            <label class="form-label" style="margin-top:0">Región</label>
+            <select id="region-select" class="input">
+              <option value="">Selecciona tu región...</option>
+              <option value="arica">Arica y Parinacota</option>
+              <option value="tarapaca">Tarapacá</option>
+              <option value="antofagasta">Antofagasta</option>
+              <option value="atacama">Atacama</option>
+              <option value="coquimbo">Coquimbo</option>
+              <option value="valparaiso">Valparaíso</option>
+              <option value="metropolitana">Metropolitana (Santiago)</option>
+              <option value="ohiggins">O'Higgins</option>
+              <option value="maule">Maule</option>
+              <option value="nuble">Ñuble</option>
+              <option value="biobio">Biobío</option>
+              <option value="araucania">La Araucanía</option>
+              <option value="rios">Los Ríos</option>
+              <option value="lagos">Los Lagos</option>
+              <option value="aysen">Aysén</option>
+              <option value="magallanes">Magallanes</option>
+            </select>
+
+            <label class="form-label">Comuna</label>
+            <select id="comuna-select" class="input" disabled>
+              <option value="">Primero elige una región</option>
+            </select>
+
+            <button class="btn secondary" id="detect-location" style="margin-top:12px;">📍 Detectar con GPS</button>
+            <p id="location-status" class="status-msg"></p>
+            <p id="coords-display" class="hint" style="margin-top:6px;"></p>
+          </div>
+        </div>
+
+        <!-- Info de la región -->
+        <div id="region-info" class="card hidden">
+          <h2 id="region-title">Región</h2>
+          <div id="region-risks" class="region-risks"></div>
+          <div id="region-tips" class="alert-box" style="margin-top:12px;"></div>
+          <div id="region-volcanoes" class="region-extra"></div>
+        </div>
+
+        <div class="card">
+          <h3>Riesgos prioritarios <span id="risks-title-suffix">en Chile</span></h3>
+          <div class="risk-grid" id="risk-grid">
+            <div class="risk-item" data-guide="sismo">
+              <span class="risk-icon">🌍</span>
+              <span>Sismos</span>
+            </div>
+            <div class="risk-item" data-guide="volcan">
+              <span class="risk-icon">🌋</span>
+              <span>Volcanes</span>
+            </div>
+            <div class="risk-item" data-guide="aluvion">
+              <span class="risk-icon">🌊</span>
+              <span>Aluviones</span>
+            </div>
+            <div class="risk-item" data-guide="inundacion">
+              <span class="risk-icon">💧</span>
+              <span>Inundaciones</span>
+            </div>
+            <div class="risk-item" data-guide="tornado">
+              <span class="risk-icon">🌪️</span>
+              <span>Vientos / Tornados</span>
+            </div>
+            <div class="risk-item" data-guide="clima">
+              <span class="risk-icon">🌡️</span>
+              <span>Clima extremo</span>
+            </div>
+            <div class="risk-item" data-guide="tsunami">
+              <span class="risk-icon">🌊</span>
+              <span>Tsunami</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Progreso del Kit</h3>
+          <div class="progress-container">
+            <div class="progress-bar">
+              <div id="kit-progress" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="kit-progress-text">0% completo</p>
+          </div>
+          <button class="btn primary" onclick="showSection('kit')">Revisar Kit →</button>
+        </div>
+      </section>
+
+      <!-- KIT DE EMERGENCIA -->
+
+      <!-- ALERTAS -->
+      <section id="alertas" class="section">
+        <div class="card highlight">
+          <h2>🚨 Alertas de Emergencia</h2>
+          <p>La <strong>alerta oficial SAE</strong> de SENAPRED llega directamente a tu celular (sistema del teléfono). Esta app no puede reemplazarla, pero te ayuda a activarla y a seguir las fuentes oficiales.</p>
+        </div>
+
+        <div class="card">
+          <h3>Cómo activar la Alerta SAE en tu celular</h3>
+          <p class="hint">Es la forma más confiable de recibir avisos de tsunami, sismos fuertes, aluviones, erupciones e incendios.</p>
+          
+          <div class="alert-steps">
+            <div class="step">
+              <strong>Android</strong>
+              <ol>
+                <li>Ve a <em>Ajustes → Seguridad y emergencia</em> (o <em>Notificaciones → Alertas de emergencia inalámbricas</em>).</li>
+                <li>Activa <strong>Alertas de emergencia</strong> / <strong>Alertas SAE</strong> / <strong>Cell Broadcast</strong>.</li>
+                <li>Asegúrate de que estén activadas las alertas de nivel extremo y severo.</li>
+              </ol>
+            </div>
+            <div class="step">
+              <strong>iPhone (iOS)</strong>
+              <ol>
+                <li>Ve a <em>Ajustes → Notificaciones</em>.</li>
+                <li>Baja hasta <strong>Alertas de emergencia</strong> o <strong>Alertas gubernamentales</strong>.</li>
+                <li>Activa todas las opciones disponibles (incluyendo alertas de prueba si aparecen).</li>
+              </ol>
+            </div>
+          </div>
+          <p class="hint" style="margin-top:12px;">En algunos equipos aparece como “Alertas de emergencia inalámbricas”, “Cell Broadcast” o “Alertas públicas”.</p>
+        </div>
+
+        <div class="card">
+          <h3>Tipos de alertamiento SENAPRED</h3>
+          <div class="alert-levels">
+            <div class="level red">
+              <strong>🔴 Alerta Roja</strong>
+              <p>Riesgo alto. Se requiere acción inmediata (evacuación o resguardo según el caso).</p>
+            </div>
+            <div class="level yellow">
+              <strong>🟡 Alerta Amarilla</strong>
+              <p>Riesgo moderado. Prepárate y mantente atento a las indicaciones.</p>
+            </div>
+            <div class="level green">
+              <strong>🟢 Alerta Temprana Preventiva</strong>
+              <p>Monitoreo preventivo. Infórmate y revisa tu plan y kit.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Fuentes oficiales en vivo</h3>
+          <div class="official-links">
+            <a href="https://www.senapred.cl/alertas/" target="_blank" rel="noopener" class="contact-item">
+              <span class="contact-icon">📢</span>
+              <div>
+                <strong>SENAPRED – Alertas vigentes</strong>
+                <span>Listado oficial de alertas</span>
+              </div>
+            </a>
+            <a href="https://www.csn.uchile.cl/" target="_blank" rel="noopener" class="contact-item">
+              <span class="contact-icon">🌍</span>
+              <div>
+                <strong>Centro Sismológico Nacional</strong>
+                <span>Sismos en tiempo real</span>
+              </div>
+            </a>
+            <a href="https://www.meteochile.gob.cl/" target="_blank" rel="noopener" class="contact-item">
+              <span class="contact-icon">🌦️</span>
+              <div>
+                <strong>Dirección Meteorológica (DMC)</strong>
+                <span>Avisos y alertas meteorológicas</span>
+              </div>
+            </a>
+            <a href="https://www.shoa.cl/" target="_blank" rel="noopener" class="contact-item">
+              <span class="contact-icon">🌊</span>
+              <div>
+                <strong>SHOA</strong>
+                <span>Tsunamis y estado del mar</span>
+              </div>
+            </a>
+            <a href="https://www.sernageomin.cl/" target="_blank" rel="noopener" class="contact-item">
+              <span class="contact-icon">🌋</span>
+              <div>
+                <strong>Sernageomin</strong>
+                <span>Volcanes y remociones en masa</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Canales oficiales recomendados</h3>
+          <ul class="official-list">
+            <li><strong>SENAPRED en X / Twitter:</strong> @Senapred</li>
+            <li><strong>Telegram SENAPRED:</strong> t.me/SenapredChile</li>
+            <li><strong>WhatsApp Channel SENAPRED:</strong> busca el canal oficial desde su sitio</li>
+            <li><strong>CSN:</strong> csn.uchile.cl y su cuenta oficial</li>
+          </ul>
+          <p class="hint">Sigue solo cuentas verificadas. En emergencias evita rumores de redes no oficiales.</p>
+        </div>
+
+        <div class="card">
+          <h3>Recordatorio en esta app</h3>
+          <p class="hint">Puedes pedir permiso para notificaciones del navegador (útiles para recordatorios de revisión del kit, no reemplazan SAE).</p>
+          <button class="btn secondary" id="enable-notifications">Activar notificaciones del navegador</button>
+          <p id="notif-status" class="status-msg"></p>
+        </div>
+      </section>
+
+      <section id="kit" class="section">
+        <div class="card">
+          <h2>Kit de Emergencia (48-72 h)</h2>
+          <p class="hint">Marca los elementos que ya tienes. El progreso se guarda automáticamente.</p>
+          
+          <div class="kit-categories">
+            <div class="kit-category">
+              <h4>💧 Agua y Alimentos</h4>
+              <label class="checkbox-item"><input type="checkbox" data-kit="agua"> Agua (mín. 2 L por persona/día)</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="alimentos"> Alimentos no perecibles (conservas, barras)</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="abrelatas"> Abrelatas manual</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="utensilios"> Utensilios básicos</label>
+            </div>
+
+            <div class="kit-category">
+              <h4>🔦 Energía e Iluminación</h4>
+              <label class="checkbox-item"><input type="checkbox" data-kit="linterna"> Linterna + pilas o dínamo</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="radio"> Radio a pilas</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="powerbank"> Power bank / cargadores</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="pilas"> Pilas de repuesto</label>
+            </div>
+
+            <div class="kit-category">
+              <h4>🏥 Salud e Higiene</h4>
+              <label class="checkbox-item"><input type="checkbox" data-kit="botiquin"> Botiquín de primeros auxilios</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="medicamentos"> Medicamentos habituales + recetas</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="higiene"> Papel higiénico, toallas, jabón</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="mascarillas"> Mascarillas (ceniza / polvo)</label>
+            </div>
+
+            <div class="kit-category">
+              <h4>📄 Documentos y Otros</h4>
+              <label class="checkbox-item"><input type="checkbox" data-kit="documentos"> Documentos en bolsa impermeable</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="dinero"> Dinero en efectivo</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="llaves"> Llaves de repuesto</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="ropa"> Muda de ropa + abrigo</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="manta"> Manta o saco de dormir</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="silbato"> Silbato</label>
+            </div>
+
+            <div class="kit-category">
+              <h4>🐾 Mascotas (si aplica)</h4>
+              <label class="checkbox-item"><input type="checkbox" data-kit="mascota-comida"> Comida y agua para mascota</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="mascota-correa"> Correa / transportín</label>
+              <label class="checkbox-item"><input type="checkbox" data-kit="mascota-carnet"> Carnet veterinario</label>
+            </div>
+          </div>
+
+          <button class="btn secondary" id="reset-kit">Reiniciar checklist</button>
+        </div>
+      </section>
+
+      <!-- GUÍAS -->
+      <section id="guias" class="section">
+        <div class="card">
+          <h2>Guías por emergencia</h2>
+          <p class="hint">Toca un riesgo para ver qué hacer antes, durante y después.</p>
+          
+          <div class="guide-list">
+            <button class="guide-btn" data-guide="sismo">🌍 Sismos / Terremotos</button>
+            <button class="guide-btn" data-guide="volcan">🌋 Volcanes</button>
+            <button class="guide-btn" data-guide="aluvion">🌊 Aluviones / Remoción en masa</button>
+            <button class="guide-btn" data-guide="inundacion">💧 Inundaciones</button>
+            <button class="guide-btn" data-guide="tornado">🌪️ Vientos fuertes / Tornados</button>
+            <button class="guide-btn" data-guide="clima">🌡️ Cambios de temperatura / Clima extremo</button>
+            <button class="guide-btn" data-guide="tsunami">🌊 Tsunami</button>
+          </div>
+        </div>
+
+        <div id="guide-content" class="card guide-detail hidden">
+          <button class="btn-back" id="close-guide">← Volver</button>
+          <div id="guide-body"></div>
+        </div>
+      </section>
+
+      <!-- PLAN FAMILIAR -->
+      <section id="plan" class="section">
+        <div class="card">
+          <h2>Plan Familiar</h2>
+          <p class="hint">Completa y guarda tu plan. Se almacena solo en tu dispositivo.</p>
+
+          <label class="form-label">Punto de encuentro principal</label>
+          <input type="text" id="punto-encuentro" class="input" placeholder="Ej: Plaza de la comuna, casa de familiar...">
+
+          <label class="form-label">Punto de encuentro alternativo</label>
+          <input type="text" id="punto-alternativo" class="input" placeholder="Ej: Colegio, centro comunitario...">
+
+          <label class="form-label">Contacto de emergencia (fuera de la zona)</label>
+          <input type="text" id="contacto-externo" class="input" placeholder="Nombre y teléfono">
+
+          <label class="form-label">Miembros de la familia / grupo</label>
+          <textarea id="miembros" class="textarea" rows="3" placeholder="Nombres y roles (quién lleva el kit, quién cuida niños, etc.)"></textarea>
+
+          <label class="form-label">Notas importantes</label>
+          <textarea id="notas-plan" class="textarea" rows="3" placeholder="Medicamentos críticos, necesidades especiales, mascotas..."></textarea>
+
+          <button class="btn primary" id="guardar-plan">Guardar Plan</button>
+          <p id="plan-status" class="status-msg"></p>
+        </div>
+      </section>
+
+      <!-- CONTACTOS -->
+      <section id="contactos" class="section">
+        <div class="card">
+          <h2>Números de Emergencia</h2>
+          
+          <div class="contact-list">
+            <a href="tel:132" class="contact-item">
+              <span class="contact-icon">🚒</span>
+              <div>
+                <strong>Bomberos</strong>
+                <span>132</span>
+              </div>
+            </a>
+            <a href="tel:133" class="contact-item">
+              <span class="contact-icon">👮</span>
+              <div>
+                <strong>Carabineros</strong>
+                <span>133</span>
+              </div>
+            </a>
+            <a href="tel:131" class="contact-item">
+              <span class="contact-icon">🚑</span>
+              <div>
+                <strong>SAMU / Ambulancia</strong>
+                <span>131</span>
+              </div>
+            </a>
+            <a href="tel:134" class="contact-item">
+              <span class="contact-icon">🔍</span>
+              <div>
+                <strong>PDI</strong>
+                <span>134</span>
+              </div>
+            </a>
+            <a href="tel:137" class="contact-item">
+              <span class="contact-icon">🌊</span>
+              <div>
+                <strong>Rescate Costero</strong>
+                <span>137</span>
+              </div>
+            </a>
+            <a href="tel:136" class="contact-item">
+              <span class="contact-icon">⛰️</span>
+              <div>
+                <strong>Socorro Andino</strong>
+                <span>136</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Fuentes oficiales</h3>
+          <ul class="official-list">
+            <li><strong>SENAPRED</strong> – senapred.cl (alertas y preparación)</li>
+            <li><strong>DMC</strong> – meteorologia.cl (pronósticos)</li>
+            <li><strong>CSN</strong> – sismologia.cl (sismos)</li>
+            <li><strong>Sernageomin</strong> – sernageomin.cl (volcanes)</li>
+            <li><strong>SHOA</strong> – shoa.cl (tsunamis)</li>
+          </ul>
+          <p class="hint">Activa las alertas SAE en tu celular para recibir avisos oficiales.</p>
+        </div>
+      </section>
+
+      <!-- EXTRAS -->
+      <section id="extras" class="section">
+        <div class="card">
+          <h2>Funciones Extra</h2>
+
+          <h3>📋 Lista de documentos importantes</h3>
+          <p class="hint">Marca los que ya tienes copiados en bolsa impermeable.</p>
+          <label class="checkbox-item"><input type="checkbox" data-doc="cedula"> Cédula de identidad (copias)</label>
+          <label class="checkbox-item"><input type="checkbox" data-doc="pasaporte"> Pasaporte / documentos de viaje</label>
+          <label class="checkbox-item"><input type="checkbox" data-doc="seguros"> Pólizas de seguro</label>
+          <label class="checkbox-item"><input type="checkbox" data-doc="propiedad"> Escritura / contrato de arriendo</label>
+          <label class="checkbox-item"><input type="checkbox" data-doc="salud"> Carné de salud / vacunas</label>
+          <label class="checkbox-item"><input type="checkbox" data-doc="bancarios"> Datos bancarios / tarjetas (números)</label>
+        </div>
+
+        <div class="card">
+          <h3>📝 Notas rápidas</h3>
+          <textarea id="notas-rapidas" class="textarea" rows="4" placeholder="Escribe recordatorios, números extras, medicamentos, etc. Se guarda automáticamente."></textarea>
+        </div>
+
+        <div class="card">
+          <h3>🔔 Recordatorio</h3>
+          <p>Revisa tu kit y plan familiar al menos cada 3 meses o después de un evento importante.</p>
+          <button class="btn secondary" id="set-reminder">Marcar revisión hecha hoy</button>
+          <p id="last-review" class="status-msg"></p>
+        </div>
+
+        <div class="card">
+          <h3>📤 Exportar / Importar datos</h3>
+          <p class="hint">Puedes copiar tus datos para respaldarlos o transferirlos a otro dispositivo.</p>
+          <button class="btn secondary" id="export-data">Exportar datos (copiar)</button>
+          <button class="btn secondary" id="import-data">Importar datos</button>
+          <textarea id="import-area" class="textarea hidden" rows="4" placeholder="Pega aquí los datos exportados..."></textarea>
+        </div>
+
+        <div class="card danger-zone">
+          <h3>🗑 Borrar todos los datos</h3>
+          <p>Esta acción elimina el progreso del kit, plan familiar y notas de este dispositivo.</p>
+          <button class="btn danger" id="clear-all">Borrar todo</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Información basada en recomendaciones de SENAPRED y organismos oficiales. No reemplaza las alertas oficiales.</p>
+      <p>App generada para uso personal · Funciona offline</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
